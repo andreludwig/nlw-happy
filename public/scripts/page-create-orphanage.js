@@ -1,13 +1,5 @@
-const options = {
-    dragging: false,
-    touchZoom: false,
-    doubleClickZoom: false,
-    scrollwheelZoom: false,
-    zoomControl: false,
-}
-
 // create map
-const map = L.map('mapid', options).setView([-27.222633, -49.6455874], 15)
+const map = L.map('mapid').setView([-27.222633, -49.6455874], 15)
 
 // create and add tileLayer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
@@ -17,35 +9,77 @@ const icon = L.icon({
     iconUrl: "./public/images/map-marker.svg",
     iconSize: [58, 68],
     iconAnchor: [29, 68],
-    popupAnchor: [170, 2]
 })
 
-// create and add marker
-L.marker([-27.222633, -49.6455874], { icon }).addTo(map)
+let marker;
 
-/* image gallery */
+//create and add marker
+map.on('click', (event) => {
+    const lat = event.latlng.lat;
+    const lng = event.latlng.lng;
 
-function selectImage(event) {
-    const button = event.currentTarget
+    document.querySelector('[name=lat]').value = lat;
+    document.querySelector('[name=lng]').value = lng;
 
-    console.log(button.children)
+    // remove icon
+    marker && map.removeLayer(marker);
 
-    // remover todas as classes .active
-    const buttons = document.querySelectorAll(".images button")
-    console.log(buttons)
-    buttons.forEach(removeActiveClass)
+    // add icon layer
+    marker = L.marker([lat, lng], { icon })
+    .addTo(map);
+})
 
-    function removeActiveClass(button) {
-        button.classList.remove("active")
+// adicionar o campo de fotos
+function addPhotoField() {
+    // pegar o container de fotos #images
+    const container = document.querySelector('#images')
+    //pegar o container para duplicar .new-image
+    const fieldsContainer = document.querySelectorAll('.new-upload')
+    // realizar o clone da última imagem adicionada.
+    const newFieldContainer = fieldsContainer[fieldsContainer.length - 1].cloneNode(true)
+
+    // verificar se o campo está vazio, se sim, não adicionar ao container de imagens
+    const input = newFieldContainer.children[0]
+
+    if(input.value == "") {
+        return
     }
 
-    // selecionar image clicada
-    const image = button.children[0]
-    const imageContainer = document.querySelector(".orphanage-details > img")
+    // limpar o campo antes de adicionar ao container de imagens
+    input.value = ""
 
-    // atualizar o container de image
-    imageContainer.src = image.src
+    // adicionar o clone ao container de #images
+    container.appendChild(newFieldContainer)
+}
 
-    // adicionar a classe .active para este botão
-    button.classList.add("active")
+function deleteField(event) {
+    const span = event.currentTarget
+
+    const fieldsContainer = document.querySelectorAll('.new-upload')
+
+    if(fieldsContainer.length < 2) {
+        // limpar o valor do campo
+        span.parentNode.children[0].value = ""
+        return
+    }
+
+    // deletar o campo
+    span.parentNode.remove();
+}
+
+// select yes or no
+function toggleSelect(event) {
+    // retirar a class .active (dos botoes)
+    document.querySelectorAll('.button-select button')
+    .forEach((button) => button.classList.remove('active'))
+
+    // colocar a class .active nesse botao clicado
+    const button = event.currentTarget
+    button.classList.add('active')
+
+    // atualizar o meu input hidden com o valor selecionado
+    const input = document.querySelector('[name="open_on_weekends"]')
+
+    input.value = button.dataset.value
+
 }
